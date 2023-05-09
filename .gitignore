@@ -21,3 +21,6 @@
 # Go workspace file
 go.work
 
+/tmp
+/conf/prod.yaml
+/scripts/tunnel*

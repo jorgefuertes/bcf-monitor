@@ -14,10 +14,11 @@ type Database struct {
 	SSL      bool   `json:"ssl"`
 }
 
-type Cache struct {
-	Name string `json:"name"`
-	Host string `json:"host"`
-	Port int    `json:"port"`
+type Redis struct {
+	Name     string `json:"name"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Password string `json:"password"`
 }
 
 type Application struct {
@@ -40,7 +41,7 @@ type SMTP struct {
 
 type Configuration struct {
 	Databases    []Database
-	Caches       []Cache
+	Caches       []Redis
 	Applications []Application
 	SMTP         SMTP `json:"smtp"`
 	Admins       []Admin
