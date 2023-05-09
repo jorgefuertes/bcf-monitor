@@ -21,7 +21,7 @@ type Redis struct {
 	Password string `json:"password"`
 }
 
-type Application struct {
+type Web struct {
 	Name   string `json:"name"`
 	URL    string `json:"url"`
 	Needle string `json:"needle"`
@@ -42,7 +42,7 @@ type SMTP struct {
 type Configuration struct {
 	Databases    []Database
 	Caches       []Redis
-	Applications []Application
+	Applications []Web
 	SMTP         SMTP `json:"smtp"`
 	Admins       []Admin
 }

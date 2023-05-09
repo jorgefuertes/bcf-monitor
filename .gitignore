@@ -23,4 +23,5 @@ go.work
 
 /tmp
 /conf/prod.yaml
+/conf/dev.yaml
 /scripts/tunnel*
