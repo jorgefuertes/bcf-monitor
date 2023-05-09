@@ -10,18 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-const TIMEOUT_SEC = 5
-
 type MongoService struct {
-	name   string
-	host   string
-	port   int
-	client *mongodb.Client
-	ok     bool
+	name    string
+	host    string
+	port    int
+	timeout int
+	every   int
+	client  *mongodb.Client
+	ok      bool
 }
 
-func NewService(name, host string, port int, SSL bool) *MongoService {
-	return &MongoService{name: name, host: host, port: port}
+func NewService(name, host string, port int, SSL bool, timeout int, every int) *MongoService {
+	return &MongoService{name: name, host: host, port: port, timeout: timeout, every: every}
 }
 
 func (s *MongoService) getURI() string {
@@ -46,7 +46,7 @@ func (s *MongoService) disconnect(ctx context.Context) error {
 }
 
 func (s *MongoService) Check() error {
-	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SEC*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.timeout)*time.Second)
 	defer cancel()
 	if err := s.connect(ctx); err != nil {
 		return err
@@ -65,4 +65,8 @@ func (s *MongoService) Down() {
 
 func (s *MongoService) Up() {
 	s.ok = true
+}
+
+func (s *MongoService) Every() time.Duration {
+	return time.Duration(s.every) * time.Second
 }

@@ -11,19 +11,20 @@ import (
 )
 
 const TEST_KEY = "bcf:monitor:test"
-const TIMEOUT_SEC = 5
 
 type RedisService struct {
-	name   string
-	host   string
-	port   int
-	pass   string
-	client *r.Client
-	ok     bool
+	name    string
+	host    string
+	port    int
+	pass    string
+	timeout int
+	every   int
+	client  *r.Client
+	ok      bool
 }
 
-func NewService(name, host string, port int, pass string) *RedisService {
-	s := &RedisService{name: name, host: host, port: port, pass: pass}
+func NewService(name, host string, port int, pass string, timeout, every int) *RedisService {
+	s := &RedisService{name: name, host: host, port: port, pass: pass, timeout: timeout, every: every}
 	s.client = r.NewClient(&r.Options{
 		Addr:                  s.getAddress(),
 		Password:              s.pass,
@@ -38,7 +39,7 @@ func (s *RedisService) getAddress() string {
 }
 
 func (s *RedisService) Check() error {
-	ctx, cancel := context.WithTimeout(context.Background(), TIMEOUT_SEC*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.timeout)*time.Second)
 	defer cancel()
 	value := primitive.NewObjectID().Hex()
 	if err := s.client.Set(ctx, TEST_KEY, value, time.Duration(2*time.Second)).Err(); err != nil {
@@ -64,4 +65,8 @@ func (s *RedisService) Down() {
 
 func (s *RedisService) Up() {
 	s.ok = true
+}
+
+func (s *RedisService) Every() time.Duration {
+	return time.Duration(s.every) * time.Second
 }

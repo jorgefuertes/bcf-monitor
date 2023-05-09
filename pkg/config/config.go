@@ -12,6 +12,8 @@ type Database struct {
 	Port     int    `json:"port"`
 	PoolSize int    `json:"poolsize"`
 	SSL      bool   `json:"ssl"`
+	Timeout  int    `json:"timeout"`
+	Every    int    `json:"every"`
 }
 
 type Redis struct {
@@ -19,12 +21,31 @@ type Redis struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
 	Password string `json:"password"`
+	Timeout  int    `json:"timeout"`
+	Every    int    `json:"every"`
+}
+
+type Header struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type Web struct {
-	Name   string `json:"name"`
-	URL    string `json:"url"`
-	Needle string `json:"needle"`
+	Name    string   `json:"name"`
+	URL     string   `json:"url"`
+	Needle  string   `json:"needle"`
+	Headers []Header `json:"headers"`
+	Timeout int      `json:"timeout"`
+	Every   int      `json:"every"`
+}
+
+func (w Web) HeaderMap() map[string]string {
+	hm := make(map[string]string)
+	for _, h := range w.Headers {
+		hm[h.Name] = h.Value
+	}
+
+	return hm
 }
 
 type Admin struct {
@@ -40,11 +61,11 @@ type SMTP struct {
 }
 
 type Configuration struct {
-	Databases    []Database
-	Caches       []Redis
-	Applications []Web
-	SMTP         SMTP `json:"smtp"`
-	Admins       []Admin
+	Databases []Database `json:"databases"`
+	Caches    []Redis    `json:"caches"`
+	Webs      []Web      `json:"webs"`
+	SMTP      SMTP       `json:"smtp"`
+	Admins    []Admin    `json:"admins"`
 }
 
 func Load(cfgFile string) (cfg Configuration, err error) {

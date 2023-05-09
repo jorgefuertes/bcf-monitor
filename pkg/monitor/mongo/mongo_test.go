@@ -17,7 +17,7 @@ func TestMongo(t *testing.T) {
 
 	for _, m := range cfg.Databases {
 		t.Logf("Checking database: %s -> %s:%d", m.Name, m.Host, m.Port)
-		s := mongo.NewService(m.Name, m.Host, m.Port, m.SSL)
+		s := mongo.NewService(m.Name, m.Host, m.Port, m.SSL, m.Timeout, m.Every)
 		assert.NoError(t, s.Check(), "Error from database", m.Name)
 	}
 }

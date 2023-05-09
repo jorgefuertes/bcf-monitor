@@ -19,6 +19,7 @@ test:
 	pushd pkg/mail;	go test -v .; popd
 	pushd pkg/monitor/mongo; go test -v .; popd
 	pushd pkg/monitor/redis; go test -v .; popd
+	pushd pkg/monitor/web; go test -v .; popd
 
 build:
 	@echo Building $(OUT)...

@@ -1,8 +1,8 @@
-package redis_test
+package web_test
 
 import (
 	"bcfmonitor/pkg/config"
-	"bcfmonitor/pkg/monitor/redis"
+	"bcfmonitor/pkg/monitor/web"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,9 +15,9 @@ func TestRedis(t *testing.T) {
 	require.NotNil(t, cfg)
 	require.NotEmpty(t, cfg.Caches, "No caches in configuration")
 
-	for _, r := range cfg.Caches {
-		t.Logf("Checking cache: %s -> %s:%d", r.Name, r.Host, r.Port)
-		s := redis.NewService(r.Name, r.Host, r.Port, r.Password, r.Timeout, r.Every)
-		assert.NoError(t, s.Check(), "Error from cache", r.Name)
+	for _, w := range cfg.Webs {
+		t.Logf("Checking web: %s", w.Name)
+		s := web.NewService(w.Name, w.URL, w.Needle, w.HeaderMap(), w.Timeout, w.Every)
+		assert.NoError(t, s.Check(), "Error from web", w.Name)
 	}
 }
