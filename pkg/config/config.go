@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bcfmonitor/pkg/mail"
 	"os"
 
 	"gopkg.in/yaml.v2"
@@ -48,16 +49,12 @@ func (w Web) HeaderMap() map[string]string {
 	return hm
 }
 
-type Admin struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
-
 type SMTP struct {
-	Host string `json:"host"`
-	Port int    `json:"port"`
-	User string `json:"user"`
-	Pass string `json:"pass"`
+	Host   string       `json:"host"`
+	Port   int          `json:"port"`
+	User   string       `json:"user"`
+	Pass   string       `json:"pass"`
+	Admins []mail.Admin `json:"admins"`
 }
 
 type Configuration struct {
@@ -65,7 +62,6 @@ type Configuration struct {
 	Caches    []Redis    `json:"caches"`
 	Webs      []Web      `json:"webs"`
 	SMTP      SMTP       `json:"smtp"`
-	Admins    []Admin    `json:"admins"`
 }
 
 func Load(cfgFile string) (cfg Configuration, err error) {

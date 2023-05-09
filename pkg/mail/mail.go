@@ -1,25 +1,38 @@
 package mail
 
 import (
+	"bcfmonitor/pkg/log"
 	"fmt"
 	"net/smtp"
 )
 
 type MailService struct {
-	host string
-	port int
-	user string
-	pass string
+	host   string
+	port   int
+	user   string
+	pass   string
+	admins []Admin
 }
 
-func NewService(host string, port int, user string, pass string) *MailService {
-	s := &MailService{host: host, port: port, user: user, pass: pass}
+type Admin struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+func NewService(host string, port int, user string, pass string, admins []Admin) *MailService {
+	s := &MailService{host: host, port: port, user: user, pass: pass, admins: admins}
 	return s
 }
 
-func (s *MailService) Send(to string, subject string, body string) error {
-	m := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s\r\n", s.user, to, subject, body))
-	hostAndPort := fmt.Sprintf("%s:%d", s.host, s.port)
-	auth := smtp.PlainAuth("", s.user, s.pass, s.host)
-	return smtp.SendMail(hostAndPort, auth, s.user, []string{to}, m)
+func (s *MailService) Send(subject string, body string) {
+	for _, a := range s.admins {
+		log.Infof("mail/send", "Sending mail to %s", a.Name)
+		m := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s\r\n", s.user, a.Email, subject, body))
+		hostAndPort := fmt.Sprintf("%s:%d", s.host, s.port)
+		auth := smtp.PlainAuth("", s.user, s.pass, s.host)
+		err := smtp.SendMail(hostAndPort, auth, s.user, []string{a.Email}, m)
+		if err != nil {
+			log.Error("mail/send", err.Error())
+		}
+	}
 }

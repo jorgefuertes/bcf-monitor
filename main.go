@@ -2,7 +2,12 @@ package main
 
 import (
 	"bcfmonitor/pkg/config"
-	"fmt"
+	"bcfmonitor/pkg/log"
+	"bcfmonitor/pkg/mail"
+	"bcfmonitor/pkg/monitor"
+	"bcfmonitor/pkg/monitor/mongo"
+	"bcfmonitor/pkg/monitor/redis"
+	"bcfmonitor/pkg/monitor/web"
 	"os"
 
 	"github.com/alecthomas/kong"
@@ -15,12 +20,36 @@ func main() {
 	// command line flags and params
 	_ = kong.Parse(&CLI)
 
-	_, err := config.Load(CLI.ConfigFile)
+	log.Infof("start", "Running on PID: %d", os.Getpid())
+	log.Info("config/load", CLI.ConfigFile)
+	cfg, err := config.Load(CLI.ConfigFile)
 	if err != nil {
-		fmt.Printf("[CONFIG/PARSE] %s\n", CLI.ConfigFile)
-		fmt.Printf("[CONFIG/PARSE] %s\n", err)
+		log.Fatalf("config/parse", "ERROR: %s", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("OK")
+	mailSvc := mail.NewService(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.User, cfg.SMTP.Pass, cfg.SMTP.Admins)
+	monitorSvc := monitor.NewService(mailSvc)
+
+	// add databases
+	for _, d := range cfg.Databases {
+		dbMon := mongo.NewService(d.Name, d.Host, d.Port, d.SSL, d.Timeout, d.Every)
+		monitorSvc.AddMonitorizable(dbMon)
+	}
+
+	// add caches
+	for _, c := range cfg.Caches {
+		cacheMon := redis.NewService(c.Name, c.Host, c.Port, c.Password, c.Timeout, c.Every)
+		monitorSvc.AddMonitorizable(cacheMon)
+	}
+
+	// add webs
+	for _, w := range cfg.Webs {
+		webMon := web.NewService(w.Name, w.URL, w.Needle, w.HeaderMap(), w.Timeout, w.Every)
+		monitorSvc.AddMonitorizable(webMon)
+	}
+
+	// start the monitor runner
+	defer log.Info("runner", "Exiting")
+	monitorSvc.Run()
 }

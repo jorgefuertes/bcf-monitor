@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bcfmonitor/pkg/log"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,6 +23,10 @@ type WebService struct {
 
 func NewService(name, url, needle string, headers map[string]string, timeout, every int) *WebService {
 	return &WebService{name: name, url: url, needle: needle, headers: headers, timeout: timeout, every: every}
+}
+
+func (s *WebService) Address() string {
+	return s.url
 }
 
 func (s *WebService) Check() error {
@@ -60,12 +65,22 @@ func (s *WebService) IsUp() bool {
 
 func (s *WebService) Down() {
 	s.ok = false
+	log.Warnf("service/web", "Service %s is DOWN", s.name)
 }
 
 func (s *WebService) Up() {
 	s.ok = true
+	log.Infof("service/web", "Service %s is UP", s.name)
 }
 
 func (s *WebService) Every() time.Duration {
 	return time.Duration(s.every) * time.Second
+}
+
+func (s *WebService) Type() string {
+	return "web"
+}
+
+func (s *WebService) Name() string {
+	return s.name
 }

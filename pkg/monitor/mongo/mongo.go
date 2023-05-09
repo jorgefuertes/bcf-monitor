@@ -1,6 +1,7 @@
 package mongo
 
 import (
+	"bcfmonitor/pkg/log"
 	"context"
 	"fmt"
 	"time"
@@ -24,13 +25,13 @@ func NewService(name, host string, port int, SSL bool, timeout int, every int) *
 	return &MongoService{name: name, host: host, port: port, timeout: timeout, every: every}
 }
 
-func (s *MongoService) getURI() string {
+func (s *MongoService) Address() string {
 	return fmt.Sprintf("mongodb://%s:%d", s.host, s.port)
 }
 
 func (s *MongoService) connect(ctx context.Context) error {
 	var err error
-	s.client, err = mongodb.NewClient(options.Client().ApplyURI(s.getURI()))
+	s.client, err = mongodb.NewClient(options.Client().ApplyURI(s.Address()))
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,19 @@ func (s *MongoService) Check() error {
 		return err
 	}
 	defer s.disconnect(ctx)
-	return s.client.Ping(ctx, readpref.Primary())
+	if err := s.client.Ping(ctx, readpref.Primary()); err != nil {
+		return err
+	}
+
+	status, err := s.client.Database("admin").RunCommand(ctx, map[string]interface{}{"serverStatus": 1}).DecodeBytes()
+	if err != nil {
+		return fmt.Errorf("reading uptime: %s", err)
+	}
+	if time.Since(time.Unix(status.Lookup("uptime").AsInt64(), 0)) < s.Every() {
+		return fmt.Errorf("uptime is lower than %d seconds", s.every)
+	}
+
+	return nil
 }
 
 func (s *MongoService) IsUp() bool {
@@ -61,12 +74,23 @@ func (s *MongoService) IsUp() bool {
 
 func (s *MongoService) Down() {
 	s.ok = false
+	log.Warnf("service/database", "Service %s is DOWN", s.name)
 }
 
 func (s *MongoService) Up() {
 	s.ok = true
+	log.Infof("service/database", "Service %s is UP", s.name)
 }
 
 func (s *MongoService) Every() time.Duration {
 	return time.Duration(s.every) * time.Second
 }
+
+func (s *MongoService) Type() string {
+	return "database"
+}
+
+func (s *MongoService) Name() string {
+	return s.name
+}
+

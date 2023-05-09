@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"bcfmonitor/pkg/log"
 	"context"
 	"errors"
 	"fmt"
@@ -26,7 +27,7 @@ type RedisService struct {
 func NewService(name, host string, port int, pass string, timeout, every int) *RedisService {
 	s := &RedisService{name: name, host: host, port: port, pass: pass, timeout: timeout, every: every}
 	s.client = r.NewClient(&r.Options{
-		Addr:                  s.getAddress(),
+		Addr:                  s.Address(),
 		Password:              s.pass,
 		DB:                    0,
 		ContextTimeoutEnabled: true,
@@ -34,7 +35,7 @@ func NewService(name, host string, port int, pass string, timeout, every int) *R
 	return s
 }
 
-func (s *RedisService) getAddress() string {
+func (s *RedisService) Address() string {
 	return fmt.Sprintf("%s:%d", s.host, s.port)
 }
 
@@ -61,12 +62,22 @@ func (s *RedisService) IsUp() bool {
 
 func (s *RedisService) Down() {
 	s.ok = false
+	log.Warnf("service/cache", "Service %s is DOWN", s.name)
 }
 
 func (s *RedisService) Up() {
 	s.ok = true
+	log.Infof("service/cache", "Service %s is UP", s.name)
 }
 
 func (s *RedisService) Every() time.Duration {
 	return time.Duration(s.every) * time.Second
+}
+
+func (s *RedisService) Type() string {
+	return "cache"
+}
+
+func (s *RedisService) Name() string {
+	return s.name
 }
