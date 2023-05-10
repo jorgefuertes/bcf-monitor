@@ -1,18 +1,20 @@
 # BcfMonitor Makefile
 
+VERSION = 1.1
 SHELL = /usr/bin/env bash
 SERVER = my.server.domain
-OUT = tmp/bcf-monitor_local
-OUT_LINUX = tmp/bcf-monitor
+TMP = tmp
+EXE_NAME = bcf-monitor
 SERVICE = svc/bcf-monitor.service
 CONF_DEV = conf/dev.yaml
 CONF_PROD = conf/prod.yaml
-BUILD_NUM_FILE ?= .build
+CONF_DIST = conf/conf.dist.yaml
 FLAGS = -s -w
 
 clean:
 	@echo Cleaning...
 	@rm -Rf tmp
+	@mkdir tmp
 	@go clean -testcache
 
 tunnels:
@@ -21,20 +23,36 @@ tunnels:
 test:
 	go test ./... -run "^Test*"
 
-build:
-	@echo Building $(OUT)...
-	go build -ldflags "$(FLAGS)" -o $(OUT)
+every-release: DEST = $(TMP)/$(EXE_NAME)_$(OS)-$(ARCH)
+every-release:
+	@echo
+	@echo Building $(DEST)
+	@mkdir -p $(DEST)
+	@mkdir -p $(TMP)/release
+	@cp $(CONF_DIST) $(DEST)/.
+	GOOS=$(OS) CGO_ENABLED=0 GOARCH=$(ARCH) go build -ldflags "$(FLAGS)" -o $(DEST)/$(EXE_NAME)
+	@echo Compressing to $(TMP)/release/$(EXE_NAME)_$(OS)-$(ARCH)_$(VERSION).tar.gz
+	@tar -C $(TMP) -czf $(TMP)/release/$(EXE_NAME)_$(OS)-$(ARCH)_$(VERSION).tar.gz $(EXE_NAME)_$(OS)-$(ARCH)
 
-build-linux:
-	@echo Building $(OUT)_linux_amd64...
-	GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -ldflags "$(FLAGS)" -o $(OUT_LINUX)
+build-linux-amd64:
+	OUT=tmp/bcf-monitor_linux_amd64 OS=linux ARCH=amd64 make every-release
+build-linux-arm:
+	OUT=tmp/bcf-monitor_linux_arm OS=linux ARCH=arm make every-release
+build-linux-arm64:
+	OUT=tmp/bcf-monitor_linux_arm64 OS=linux ARCH=arm64 make every-release
+build-osx-amd64:
+	OUT=tmp/bcf-monitor_osx_amd64 OS=darwin ARCH=amd64 make every-release
+build-osx-arm64:
+	OUT=tmp/bcf-monitor_osx_arm64 OS=darwin ARCH=arm64 make every-release
 
-publish: build-linux
+publish: test build-linux-amd64
 	ssh root@$(SERVER) "service bcf-monitor stop; true"
 	ssh root@$(SERVER) mkdir -p /root/bcf-monitor
-	scp $(OUT_LINUX) $(CONF_PROD) root@$(SERVER):/root/bcf-monitor/.
+	scp $(OUT_LINUX_DIR)_amd64/bcf-monitor $(CONF_PROD) root@$(SERVER):/root/bcf-monitor/.
 	scp $(SERVICE) root@$(SERVER):/etc/systemd/system/.
 	ssh root@$(SERVER) "systemctl daemon-reload; service bcf-monitor restart"
+
+release: build-linux-amd64 build-linux-arm build-linux-arm64 build-osx-amd64 build-osx-arm64
 
 run:
 	go run . -c $(CONF_DEV)
