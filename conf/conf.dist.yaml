@@ -1,34 +1,49 @@
 databases:
-  - name: db-01
+  - name: mongodb01
     host: 127.0.0.1
     port: 27017
     ssl: false
-  - name: db-02
-    host: 127.0.0.1
+    timeout: 5
+    every: 30
+  - name: mongodb01
+    host: 192.168.1.2
     port: 27018
     ssl: false
-  - name: db-03
-    host: 127.0.0.1
-    port: 27019
-    ssl: false
+    timeout: 5
+    every: 30
 
 caches:
-  - name: my-redis
+  - name: cache01
     host: 127.0.0.1
     port: 6379
     password:
+    timeout: 5
+    every: 15
 
 webs:
   - name: front-app
-    url: https://my.app.domain
-    needle: OK string in response
+    url: https://localhost/home
+    needle: Welcome to the home
+    timeout: 5
+    every: 60
+  - name: api
+    url: https://localhost/api/hello
+    needle: Hello World
+    headers:
+      - name: X-App-Id
+        value: your-app-id
+      - name: X-App-Key
+        value: your-app-key
+    timeout: 5
+    every: 60
 
 smtp:
-  host: mail.my.domain
+  host: my.mail-server.fqdn
   port: 25
-  user: monitor@email.com
-  pass: mail-password
-
-admins:
-  - name: Jorge Fuertes
-    email: jorge@jorgefuertes.com
+  user: myuser@mail-server.fqdn
+  pass: your-mail-password
+  admins:
+    - name: Jhon Doe
+      email: jhon@doe.domain
+    - name: Jhon Smith
+      email: jhon@smith.domain

@@ -1,0 +1,14 @@
+[Unit]
+Description=BCF Monitor
+After=network.target auditd.service
+
+[Service]
+Type=simple
+ExecStart=/root/bcf-monitor/bcf-monitor -c /root/bcf-monitor/prod.yaml
+Restart=always
+User=root
+WorkingDirectory=/root/bcf-monitor
+
+[Install]
+WantedBy=multi-user.target
+Alias=bcf-monitor.service

@@ -25,3 +25,4 @@ go.work
 /conf/prod.yaml
 /conf/dev.yaml
 /scripts/tunnel*
+Makefile

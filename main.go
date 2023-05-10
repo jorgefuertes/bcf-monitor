@@ -13,6 +13,8 @@ import (
 	"github.com/alecthomas/kong"
 )
 
+const VERSION = "1.0"
+
 func main() {
 	var CLI struct {
 		ConfigFile string `default:"conf/dev.yaml" short:"c" aliases:"conf" help:"path to yaml config file"`
@@ -20,7 +22,7 @@ func main() {
 	// command line flags and params
 	_ = kong.Parse(&CLI)
 
-	log.Infof("start", "Running on PID: %d", os.Getpid())
+	log.Infof("start", "Version %s running on PID: %d", VERSION, os.Getpid())
 	log.Info("config/load", CLI.ConfigFile)
 	cfg, err := config.Load(CLI.ConfigFile)
 	if err != nil {

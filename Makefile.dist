@@ -1,0 +1,40 @@
+# BcfMonitor Makefile
+
+SHELL = /usr/bin/env bash
+SERVER = my.server.domain
+OUT = tmp/bcf-monitor_local
+OUT_LINUX = tmp/bcf-monitor
+SERVICE = svc/bcf-monitor.service
+CONF_DEV = conf/dev.yaml
+CONF_PROD = conf/prod.yaml
+BUILD_NUM_FILE ?= .build
+FLAGS = -s -w
+
+clean:
+	@echo Cleaning...
+	@rm -Rf tmp
+	@go clean -testcache
+
+tunnels:
+	scripts/tunnel-up.sh
+
+test:
+	go test ./... -run "^Test*"
+
+build:
+	@echo Building $(OUT)...
+	go build -ldflags "$(FLAGS)" -o $(OUT)
+
+build-linux:
+	@echo Building $(OUT)_linux_amd64...
+	GOOS=linux CGO_ENABLED=0 GOARCH=amd64 go build -ldflags "$(FLAGS)" -o $(OUT_LINUX)
+
+publish: build-linux
+	ssh root@$(SERVER) "service bcf-monitor stop; true"
+	ssh root@$(SERVER) mkdir -p /root/bcf-monitor
+	scp $(OUT_LINUX) $(CONF_PROD) root@$(SERVER):/root/bcf-monitor/.
+	scp $(SERVICE) root@$(SERVER):/etc/systemd/system/.
+	ssh root@$(SERVER) "systemctl daemon-reload; service bcf-monitor restart"
+
+run:
+	go run . -c $(CONF_DEV)

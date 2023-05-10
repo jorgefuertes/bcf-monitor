@@ -61,7 +61,7 @@ func (r *Runner) Run() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 
-	r.mailSvc.Send("BCFMonitor: Starting", "Monitoring service is starting.\r\n")
+	go r.mailSvc.Send("BCFMonitor: Starting", "Monitoring service is starting.\r\n")
 
 	for {
 		sig := <-signals
@@ -113,7 +113,7 @@ func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, done chan bool
 						"\r\n\r\nPassed all tests OK.\r\n",
 						m.Type(), m.Name(), m.Address(),
 					)
-					r.mailSvc.Send(subject, body)
+					go r.mailSvc.Send(subject, body)
 					m.Up()
 				}
 			}
