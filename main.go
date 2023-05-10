@@ -13,7 +13,7 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-const VERSION = "1.0"
+const VERSION = "1.2"
 
 func main() {
 	var CLI struct {

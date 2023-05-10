@@ -19,7 +19,87 @@ Check if you are looking for at least two of this principles before to use this 
 - **IHNT**: I have no time!
 - **FAIF**: Free as in freedom.
 
-## Usage
+## Installation from binary
+
+### Download the latest release for your architecture
+
+Just go to the releases page:
+
+- <https://github.com/jorgefuertes/bcf-monitor/releases>
+
+If you can't find your arquitecture, please, raise an issue.
+
+### Upload the executable to your server
+
+~~~bash
+tar xvzf bcf-monitor_linux-amd64_1.2.tar.gz
+cd bcf-monitor_linux-amd64_1.2
+scp bcf-monitor root@your.server.domain:/usr/local/bin/.
+~~~
+
+### Rename `conf.dist.yaml` to `bcf-monitor-prod.yaml`
+
+~~~bash
+mv conf.dist.yaml bcf-monitor-prod.yaml
+~~~
+
+### Edit the configuration and upload it
+
+Edit the `yaml` and configure your _runners_, the _smtp_ and the _administrative contacts_.
+
+At this time we are only supporting the monitorization of _mongodb_, _redis_ and _web applications_ via _GET request_ with or without aditional headers. In addition it looks for a needle text in the _html_.
+
+Upload to `/etc`:
+
+~~~bash
+scp bcf-monitor-prod.yml root@your.server.domain:/etc/.
+~~~
+
+### Try it
+
+~~~bash
+/usr/local/bin/bcf-monitor -c /etc/bcf-monitor-prod.yaml
+~~~
+
+### Service it
+
+Now you can define a systemd unit, a daemontools svc or whatever you want to have it alwais running.
+
+### Example systemd unit
+
+Create this file in `/etc/systemd/system/.`:
+
+~~~ini
+[Unit]
+Description=BCF Monitor
+After=network.target auditd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/bcf-monitor -c /etc/bcf-monitor-prod.yaml
+Restart=always
+User=root
+WorkingDirectory=/usr/local/bin
+
+[Install]
+WantedBy=multi-user.target
+Alias=bcf-monitor.service
+~~~
+
+Now you and load the unit and start the service:
+
+~~~bash
+systemctl daemon-reload
+service bcf-monitor restart
+~~~
+
+Watch the log to see if all is working fine:
+
+~~~bash
+journalctl -efu bcf-monitor
+~~~
+
+## Installation from source
 
 ### Clone this repo and change dir
 

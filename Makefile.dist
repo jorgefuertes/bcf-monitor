@@ -1,6 +1,6 @@
 # BcfMonitor Makefile
 
-VERSION = 1.1
+VERSION = 1.2
 SHELL = /usr/bin/env bash
 SERVER = my.server.domain
 TMP = tmp
