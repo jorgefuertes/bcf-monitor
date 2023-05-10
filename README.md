@@ -14,10 +14,10 @@ Installing it is as easy as copying both files to a server and starting the serv
 
 Check if you are looking for at least two of this principles before to use this software:
 
-- KISS: Keep it simple, stupid!
-- SRP: Single Responsibility Principle.
-- IHNT: I have no time!
-- FAIF: Free as in freedom.
+- **KISS**: Keep it simple, stupid!
+- **SRP**: Single Responsibility Principle.
+- **IHNT**: I have no time!
+- **FAIF**: Free as in freedom.
 
 ## Usage
 
@@ -98,6 +98,7 @@ Feel you free to improve it and make a pull request.
 - AKA Queru
 - <me@jorgefuertes.com>
 - <https://jorgefuertes.com>
+- <https://github.com/jorgefuertes>
 
 ## License
 
