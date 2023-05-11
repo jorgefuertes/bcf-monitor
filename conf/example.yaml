@@ -37,6 +37,16 @@ webs:
     timeout: 5
     every: 60
 
+pings:
+  - name: localhost
+    host: 127.0.0.1
+    timeout: 5
+    every: 10
+  - name: router
+    host: 192.168.1.1
+    timeout: 5
+    every: 10
+
 smtp:
   host: my.mail-server.fqdn
   port: 25

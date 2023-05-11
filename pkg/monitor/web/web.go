@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-const TIMEOUT_SEC = 5
-
 type WebService struct {
 	name    string
 	url     string

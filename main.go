@@ -6,6 +6,7 @@ import (
 	"bcfmonitor/pkg/mail"
 	"bcfmonitor/pkg/monitor"
 	"bcfmonitor/pkg/monitor/mongo"
+	"bcfmonitor/pkg/monitor/ping"
 	"bcfmonitor/pkg/monitor/redis"
 	"bcfmonitor/pkg/monitor/web"
 	"os"
@@ -52,6 +53,11 @@ func main() {
 	for _, w := range cfg.Webs {
 		webMon := web.NewService(w.Name, w.URL, w.Needle, w.HeaderMap(), w.Timeout, w.Every)
 		monitorSvc.AddMonitorizable(webMon)
+	}
+
+	for _, p := range cfg.Pings {
+		pingMon := ping.NewService(p.Name, p.Host, p.Timeout, p.Every)
+		monitorSvc.AddMonitorizable(pingMon)
 	}
 
 	// start the monitor runner

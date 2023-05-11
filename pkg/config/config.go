@@ -57,10 +57,18 @@ type SMTP struct {
 	Admins []mail.Admin `json:"admins"`
 }
 
+type Ping struct {
+	Name    string `json:"name"`
+	Host    string `json:"host"`
+	Timeout int    `json:"timeout"`
+	Every   int    `json:"every"`
+}
+
 type Configuration struct {
 	Databases []Database `json:"databases"`
 	Caches    []Redis    `json:"caches"`
 	Webs      []Web      `json:"webs"`
+	Pings     []Ping     `json:"pings"`
 	SMTP      SMTP       `json:"smtp"`
 }
 

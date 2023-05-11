@@ -47,7 +47,15 @@ mv example.yaml bcf-monitor-prod.yaml
 
 Edit the `yaml` and configure your _runners_, the _smtp_ and the _administrative contacts_.
 
-At this time we are only supporting the monitorization of _mongodb_, _redis_ and _web applications_ via _GET request_ with or without aditional headers. In addition it looks for a needle text in the _html_.
+At this time we are only supporting the monitorization of
+
+- _ping_:
+  - Using the system `ping` command. If we use ICMP then we need root privileges.
+- _mongodb_
+- _redis_
+- _web applications_:
+  - _GET request_ with or without aditional headers.
+  - In addition it looks for a needle text in the _html_.
 
 Upload to `/etc`:
 
