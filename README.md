@@ -37,10 +37,10 @@ cd bcf-monitor_linux-amd64_1.2
 scp bcf-monitor root@your.server.domain:/usr/local/bin/.
 ~~~
 
-### Rename `conf.dist.yaml` to `bcf-monitor-prod.yaml`
+### Rename `example.yaml` to `bcf-monitor-prod.yaml`
 
 ~~~bash
-mv conf.dist.yaml bcf-monitor-prod.yaml
+mv example.yaml bcf-monitor-prod.yaml
 ~~~
 
 ### Edit the configuration and upload it
@@ -108,26 +108,22 @@ git clone git@github.com:jorgefuertes/bcf-monitor.git
 cd bcf-monitor
 ~~~
 
-### Copy Makefile.dist
+### Makefile
 
-~~~bash
-cp Makefile.dist Makefile
+Create a `.secrets` file like this one:
+
+~~~ini
+SERVER=api.blockchainfue.com
 ~~~
 
-### Edit the Makefile to fit your needs
-
-Take a look specifically to this var:
-
-~~~make
-SERVER = api.blockchainfue.com
-~~~
+Take a look into the make file if you need to modify something or add any other architecture.
 
 ### Configure the monitor
 
-Copy `conf.dist.yaml`
+Copy `example.yaml`
 
 ~~~bash
-cp conf/conf.dist.yaml conf/prod.yaml
+cp conf/example.yaml conf/prod.yaml
 ~~~
 
 Edit `prod.yaml` and configure your _runners_, the _smtp_ and the _administrative contacts_.
@@ -145,6 +141,8 @@ make run
 ~~~
 
 ### Publish to your server
+
+By default we are building a binary to a GNU/Linux OS, with amd64 architecture. You'll need to adjust the `Makefile` if it doesn't suit your server, but it's pretty easy.
 
 ~~~bash
 make publish

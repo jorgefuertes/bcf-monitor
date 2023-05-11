@@ -13,7 +13,9 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-const VERSION = "1.2"
+var version = "undefined"
+var buildNumber = "undefined"
+var buildDate = "undefined"
 
 func main() {
 	var CLI struct {
@@ -22,7 +24,8 @@ func main() {
 	// command line flags and params
 	_ = kong.Parse(&CLI)
 
-	log.Infof("start", "Version %s running on PID: %d", VERSION, os.Getpid())
+	log.Infof("start", "Version %s, Build #%s@%s", version, buildNumber, buildDate)
+	log.Infof("start", "Running on PID: %d", os.Getpid())
 	log.Info("config/load", CLI.ConfigFile)
 	cfg, err := config.Load(CLI.ConfigFile)
 	if err != nil {
