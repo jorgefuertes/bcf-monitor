@@ -4,10 +4,10 @@ After=network.target auditd.service
 
 [Service]
 Type=simple
-ExecStart=/root/bcf-monitor/bcf-monitor -c /root/bcf-monitor/prod.yaml
+ExecStart=/usr/local/bin/bcf-monitor -c /etc/bcfmonitor-conf.yaml
 Restart=always
 User=root
-WorkingDirectory=/root/bcf-monitor
+WorkingDirectory=/usr/local/bin
 
 [Install]
 WantedBy=multi-user.target
