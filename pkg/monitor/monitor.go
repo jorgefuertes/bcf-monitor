@@ -90,7 +90,7 @@ func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, done chan bool
 				log.Warnf("runner/err", "%s %s: %s", m.Type(), m.Name(), err)
 				if m.IsUp() {
 					// was up so I need to alert
-					subject := fmt.Sprintf("Outage: Service %s %s is down!", m.Type(), m.Name())
+					subject := fmt.Sprintf("Outage: Service %s %s is DOWN!", m.Type(), m.Name())
 					body := fmt.Sprintf("BCFMonitor has detected a service outage:\r\n\r\n"+
 						"- Service type: %s\r\n"+
 						"- Service name: %s\r\n"+
@@ -102,10 +102,10 @@ func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, done chan bool
 					m.Down()
 				}
 			} else {
-				log.Infof("runner", "Checking service %s: %s...OK", m.Type(), m.Name())
 				if !m.IsUp() {
+					log.Infof("runner", "Recovery: Service %s: %s is UP!", m.Type(), m.Name())
 					// was down, notify recover
-					subject := fmt.Sprintf("Recover: Service %s %s is up!", m.Type(), m.Name())
+					subject := fmt.Sprintf("Recovery: Service %s %s is UP again!", m.Type(), m.Name())
 					body := fmt.Sprintf("BCFMonitor has detected a service recovery:\r\n\r\n"+
 						"- Service type: %s\r\n"+
 						"- Service name: %s\r\n"+
