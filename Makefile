@@ -1,8 +1,8 @@
 # BcfMonitor Makefile
 
 SHELL = /usr/bin/env bash
-SERVER = `cat .secrets|grep "SERVER="|cut -f2 -d"="`
-build_num_create := `! test -f .build &&	echo 0 > .build)
+SERVER = $(shell cat .secrets|grep "SERVER="|cut -f2 -d"=")
+build_num_create := $(shell ! test -f .build && echo 0 > .build)
 build_num = $(shell echo $$(($$(cat .build) + 1)) > .build && cat .build)
 VERSION = `cat .version|grep "VERSION="|cut -f2 -d"="`
 SHELL = /usr/bin/env bash
@@ -29,7 +29,7 @@ tunnels:
 test:
 	go test ./... -run "^Test*"
 
-every-release: DEST = $(TMP)/$(EXE_NAME)_$(OS)-$(ARCH)
+every-release: DEST = $(TMP)/$(EXE_NAME)_$(OS)_$(ARCH)
 every-release:
 	@echo Building $(DEST)
 	@mkdir -p $(DEST)
@@ -37,8 +37,8 @@ every-release:
 	@cp $(CONF_DIST) $(DEST)/.
 	@go mod tidy
 	@GOOS=$(OS) CGO_ENABLED=0 GOARCH=$(ARCH) go build -ldflags "$(FLAGS)" -o $(DEST)/$(EXE_NAME)
-	@echo Compressing to $(TMP)/release/$(EXE_NAME)_$(OS)-$(ARCH)_$(VERSION).tar.gz
-	@tar -C $(TMP) -czf $(TMP)/release/$(EXE_NAME)_$(OS)-$(ARCH)_$(VERSION).tar.gz $(EXE_NAME)_$(OS)-$(ARCH)
+	@echo Compressing to $(TMP)/release/$(EXE_NAME)_$(OS)_$(ARCH)_$(VERSION).tar.gz
+	@tar -C $(TMP) -czf $(TMP)/release/$(EXE_NAME)_$(OS)_$(ARCH)_$(VERSION).tar.gz $(EXE_NAME)_$(OS)_$(ARCH)
 
 build-linux-amd64:
 	@OUT=tmp/bcf-monitor_linux_amd64 OS=linux ARCH=amd64 make every-release
@@ -52,11 +52,16 @@ build-osx-arm64:
 	@OUT=tmp/bcf-monitor_osx_arm64 OS=darwin ARCH=arm64 make every-release
 
 publish: test build-linux-amd64
-	ssh root@$(SERVER) "service bcf-monitor stop; true"
-	ssh root@$(SERVER) mkdir -p /root/bcf-monitor
-	scp $(OUT_LINUX_DIR)_amd64/bcf-monitor $(CONF_PROD) root@$(SERVER):/root/bcf-monitor/.
-	scp $(SERVICE) root@$(SERVER):/etc/systemd/system/.
-	ssh root@$(SERVER) "systemctl daemon-reload; service bcf-monitor restart"
+	@echo "Service stop..."
+	@ssh root@$(SERVER) "service bcf-monitor stop; true"
+	@echo "Uploading..."
+	@ssh root@$(SERVER) mkdir -p /root/bcf-monitor
+	@scp tmp/bcf-monitor_linux_amd64/$(EXE_NAME) root@$(SERVER):/usr/local/bin/.
+	@scp $(CONF_PROD) root@$(SERVER):/etc/bcfmonitor-conf.yaml
+	@scp $(SERVICE) root@$(SERVER):/etc/systemd/system/.
+	@echo "Starting service..."
+	@ssh root@$(SERVER) "systemctl daemon-reload; service bcf-monitor restart"
+	@echo "Ready"
 
 release: build-linux-amd64 build-linux-arm build-linux-arm64 build-osx-amd64 build-osx-arm64
 
