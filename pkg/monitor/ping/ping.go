@@ -4,6 +4,7 @@ import (
 	"bcfmonitor/pkg/log"
 	"fmt"
 	"os/exec"
+	"runtime"
 	"time"
 )
 
@@ -24,7 +25,11 @@ func (s *PingService) Address() string {
 }
 
 func (s *PingService) Check() error {
-	_, err := exec.Command("ping", s.host, "-c 1", fmt.Sprintf("-t %d", s.timeout)).Output()
+	timeout := fmt.Sprintf("-i %d", s.timeout)
+	if runtime.GOOS == "linux" {
+		timeout = fmt.Sprintf("-w %d", s.timeout)
+	}
+	_, err := exec.Command("ping", s.host, "-c 1", timeout).Output()
 	if err != nil {
 		return err
 	}
