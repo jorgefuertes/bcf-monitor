@@ -25,8 +25,8 @@ func NewService(host string, port int, user string, pass string, admins []Admin)
 }
 
 func (s *MailService) Send(subject string, body string) {
+	log.Infof("mail/send", "Sending alert to admins: \"%s\"", subject)
 	for _, a := range s.admins {
-		log.Infof("mail/send", "Sending mail to %s", a.Name)
 		m := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s\r\n", s.user, a.Email, subject, body))
 		hostAndPort := fmt.Sprintf("%s:%d", s.host, s.port)
 		auth := smtp.PlainAuth("", s.user, s.pass, s.host)
