@@ -3,6 +3,7 @@ package monitor
 import (
 	"bcfmonitor/pkg/log"
 	"bcfmonitor/pkg/mail"
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -26,17 +27,20 @@ type Runner struct {
 	monitors []Monitorizable
 	mailSvc  *mail.MailService
 	tickers  []*time.Ticker
-	dones    []chan bool
+	ctx      context.Context
+	cancel   context.CancelFunc
 	mux      *sync.Mutex
 }
 
 func NewService(mailSvc *mail.MailService) *Runner {
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Runner{
-		monitors: make([]Monitorizable, 0),
+		monitors: []Monitorizable{},
 		mailSvc:  mailSvc,
-		tickers:  make([]*time.Ticker, 0),
-		dones:    make([]chan bool, 0),
-		mux:      new(sync.Mutex),
+		tickers:  []*time.Ticker{},
+		ctx:      ctx,
+		cancel:   cancel,
+		mux:      &sync.Mutex{},
 	}
 }
 
@@ -48,13 +52,12 @@ func (r *Runner) AddMonitorizable(m Monitorizable) {
 	// add to runner
 	r.monitors = append(r.monitors, m)
 	r.tickers = append(r.tickers, time.NewTicker(m.Every()))
-	r.dones = append(r.dones, make(chan bool))
 }
 
 func (r *Runner) Run() {
 	defer r.Stop()
 	for i, m := range r.monitors {
-		go r.checkingRoutine(m, r.tickers[i], r.dones[i])
+		go r.checkingRoutine(m, r.tickers[i], r.ctx)
 	}
 
 	// signals
@@ -71,17 +74,15 @@ func (r *Runner) Run() {
 }
 
 func (r *Runner) Stop() {
-	log.Infof("runner", "Stopping %d monitors", len(r.dones))
-	for _, done := range r.dones {
-		done <- true
-	}
+	log.Infof("runner", "Stopping %d monitors", len(r.monitors))
+	r.cancel()
 }
 
-func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, done chan bool) {
+func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, ctx context.Context) {
 	log.Infof("runner", "Starting runner for %s: %s (every %0.2fs)", m.Type(), m.Name(), m.Every().Seconds())
 	for {
 		select {
-		case <-done:
+		case <-ctx.Done():
 			log.Infof("runner", "Closing runner for %s: %s", m.Type(), m.Name())
 			return
 		case <-t.C:
