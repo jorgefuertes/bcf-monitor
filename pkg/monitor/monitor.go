@@ -84,11 +84,12 @@ func (r *Runner) Stop() {
 func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, ctx context.Context, wg *sync.WaitGroup) {
 	log.Infof("runner", "Starting runner for %s: %s (every %0.2fs)", m.Type(), m.Name(), m.Every().Seconds())
 	wg.Add(1)
+	defer wg.Done()
+
 	for {
 		select {
 		case <-ctx.Done():
 			log.Infof("runner", "Closing runner for %s: %s", m.Type(), m.Name())
-			wg.Done()
 			return
 		case <-t.C:
 			err := m.Check()
