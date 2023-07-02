@@ -94,7 +94,7 @@ WantedBy=multi-user.target
 Alias=bcf-monitor.service
 ~~~
 
-Now you and load the unit and start the service:
+Load the unit and start the service:
 
 ~~~bash
 systemctl daemon-reload
