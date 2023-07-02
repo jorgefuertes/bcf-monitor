@@ -30,6 +30,7 @@ type Runner struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
 	mux      *sync.Mutex
+	wg       *sync.WaitGroup
 }
 
 func NewService(mailSvc *mail.MailService) *Runner {
@@ -41,6 +42,7 @@ func NewService(mailSvc *mail.MailService) *Runner {
 		ctx:      ctx,
 		cancel:   cancel,
 		mux:      &sync.Mutex{},
+		wg:       &sync.WaitGroup{},
 	}
 }
 
@@ -57,7 +59,7 @@ func (r *Runner) AddMonitorizable(m Monitorizable) {
 func (r *Runner) Run() {
 	defer r.Stop()
 	for i, m := range r.monitors {
-		go r.checkingRoutine(m, r.tickers[i], r.ctx)
+		go r.checkingRoutine(m, r.tickers[i], r.ctx, r.wg)
 	}
 
 	// signals
@@ -76,14 +78,17 @@ func (r *Runner) Run() {
 func (r *Runner) Stop() {
 	log.Infof("runner", "Stopping %d monitors", len(r.monitors))
 	r.cancel()
+	r.wg.Wait()
 }
 
-func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, ctx context.Context) {
+func (r *Runner) checkingRoutine(m Monitorizable, t *time.Ticker, ctx context.Context, wg *sync.WaitGroup) {
 	log.Infof("runner", "Starting runner for %s: %s (every %0.2fs)", m.Type(), m.Name(), m.Every().Seconds())
+	wg.Add(1)
 	for {
 		select {
 		case <-ctx.Done():
 			log.Infof("runner", "Closing runner for %s: %s", m.Type(), m.Name())
+			wg.Done()
 			return
 		case <-t.C:
 			err := m.Check()
