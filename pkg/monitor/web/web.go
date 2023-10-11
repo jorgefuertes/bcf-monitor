@@ -1,26 +1,27 @@
 package web
 
 import (
-	"bcfmonitor/pkg/log"
+	"bcfmonitor/pkg/monitor/common"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type WebService struct {
+	common.MonitorizableBase
 	name    string
 	url     string
 	needle  string
-	timeout int
-	every   int
 	headers map[string]string
-	ok      bool
 }
 
 func NewService(name, url, needle string, headers map[string]string, timeout, every int) *WebService {
-	return &WebService{name: name, url: url, needle: needle, headers: headers, timeout: timeout, every: every}
+	s := &WebService{name: name, url: url, needle: needle, headers: headers}
+	s.TimeoutSeconds = timeout
+	s.EverySeconds = every
+
+	return s
 }
 
 func (s *WebService) Address() string {
@@ -30,8 +31,9 @@ func (s *WebService) Address() string {
 func (s *WebService) Check() error {
 	client := new(http.Client)
 	req, err := http.NewRequest(http.MethodGet, s.url, nil)
-	client.Timeout = time.Duration(s.timeout) * time.Second
+	client.Timeout = s.Timeout()
 	if err != nil {
+		s.AddFail()
 		return err
 	}
 	for k, v := range s.headers {
@@ -40,39 +42,26 @@ func (s *WebService) Check() error {
 
 	resp, err := client.Do(req)
 	if err != nil {
+		s.AddFail()
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
+		s.AddFail()
 		return fmt.Errorf("response: %s", resp.Status)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		s.AddFail()
 		return err
 	}
 	if !strings.Contains(string(body), s.needle) {
+		s.AddFail()
 		return fmt.Errorf("body doesn't contains \"%s\"", s.needle)
 	}
 
+	s.Reset()
 	return nil
-}
-
-func (s *WebService) IsUp() bool {
-	return s.ok
-}
-
-func (s *WebService) Down() {
-	s.ok = false
-	log.Warnf("service/web", "Service %s is DOWN", s.name)
-}
-
-func (s *WebService) Up() {
-	s.ok = true
-	log.Infof("service/web", "Service %s is UP", s.name)
-}
-
-func (s *WebService) Every() time.Duration {
-	return time.Duration(s.every) * time.Second
 }
 
 func (s *WebService) Type() string {

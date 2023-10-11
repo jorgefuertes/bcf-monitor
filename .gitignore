@@ -26,3 +26,4 @@ go.work
 /conf/dev.yaml
 /scripts/tunnel*
 .secrets
+.env

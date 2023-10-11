@@ -15,6 +15,8 @@ type Database struct {
 	SSL      bool   `json:"ssl"`
 	Timeout  int    `json:"timeout"`
 	Every    int    `json:"every"`
+	FailAfterRetries int `json:"fail_after_retries" yaml:"fail_after_retries"`
+	RememberAfterMinutes int `json:"remember_after_minutes" yaml:"remember_after_retries"`
 }
 
 type Redis struct {
@@ -24,11 +26,15 @@ type Redis struct {
 	Password string `json:"password"`
 	Timeout  int    `json:"timeout"`
 	Every    int    `json:"every"`
+	FailAfterRetries int `json:"fail_after_retries" yaml:"fail_after_retries"`
+	RememberAfterMinutes int `json:"remember_after_minutes" yaml:"remember_after_retries"`
 }
 
 type Header struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+	FailAfterRetries int `json:"fail_after_retries" yaml:"fail_after_retries"`
+	RememberAfterMinutes int `json:"remember_after_minutes" yaml:"remember_after_retries"`
 }
 
 type Web struct {
@@ -38,6 +44,8 @@ type Web struct {
 	Headers []Header `json:"headers"`
 	Timeout int      `json:"timeout"`
 	Every   int      `json:"every"`
+	FailAfterRetries int `json:"fail_after_retries" yaml:"fail_after_retries"`
+	RememberAfterMinutes int `json:"remember_after_minutes" yaml:"remember_after_retries"`
 }
 
 func (w Web) HeaderMap() map[string]string {
@@ -62,6 +70,8 @@ type Ping struct {
 	Host    string `json:"host"`
 	Timeout int    `json:"timeout"`
 	Every   int    `json:"every"`
+	FailAfterRetries int `json:"fail_after_retries" yaml:"fail_after_retries"`
+	RememberAfterMinutes int `json:"remember_after_minutes" yaml:"remember_after_retries"`
 }
 
 type Configuration struct {
@@ -80,4 +90,12 @@ func Load(cfgFile string) (cfg Configuration, err error) {
 
 	err = yaml.Unmarshal(content, &cfg)
 	return
+}
+
+func (cfg Configuration) Dump() (string, error) {
+	b, err := yaml.Marshal(cfg)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }

@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"bcfmonitor/pkg/log"
+	"bcfmonitor/pkg/monitor/common"
 	"context"
 	"errors"
 	"fmt"
@@ -14,18 +14,18 @@ import (
 const TEST_KEY = "bcf:monitor:test"
 
 type RedisService struct {
+	common.MonitorizableBase
 	name    string
 	host    string
 	port    int
 	pass    string
-	timeout int
-	every   int
 	client  *r.Client
-	ok      bool
 }
 
 func NewService(name, host string, port int, pass string, timeout, every int) *RedisService {
-	s := &RedisService{name: name, host: host, port: port, pass: pass, timeout: timeout, every: every}
+	s := &RedisService{name: name, host: host, port: port, pass: pass}
+	s.TimeoutSeconds = timeout
+	s.EverySeconds = every
 	s.client = r.NewClient(&r.Options{
 		Addr:                  s.Address(),
 		Password:              s.pass,
@@ -40,38 +40,25 @@ func (s *RedisService) Address() string {
 }
 
 func (s *RedisService) Check() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), s.Timeout())
 	defer cancel()
 	value := primitive.NewObjectID().Hex()
 	if err := s.client.Set(ctx, TEST_KEY, value, time.Duration(2*time.Second)).Err(); err != nil {
+		s.AddFail()
 		return err
 	}
 	getValue, err := s.client.Get(ctx, TEST_KEY).Result()
 	if err != nil {
+		s.AddFail()
 		return err
 	}
 	if getValue != value {
+		s.AddFail()
 		return errors.New("read value not equal to set value")
 	}
+
+	s.Reset()
 	return nil
-}
-
-func (s *RedisService) IsUp() bool {
-	return s.ok
-}
-
-func (s *RedisService) Down() {
-	s.ok = false
-	log.Warnf("service/cache", "Service %s is DOWN", s.name)
-}
-
-func (s *RedisService) Up() {
-	s.ok = true
-	log.Infof("service/cache", "Service %s is UP", s.name)
-}
-
-func (s *RedisService) Every() time.Duration {
-	return time.Duration(s.every) * time.Second
 }
 
 func (s *RedisService) Type() string {

@@ -1,0 +1,33 @@
+version: '3'
+
+dotenv: ['.env', '.secrets']
+
+# build_num_create := $(shell ! test -f .build && echo 0 > .build)
+# build_num = $(shell echo $$(($$(cat .build) + 1)) > .build && cat .build)
+
+env:
+  DATE:
+    sh: date +'%Y%m%d'
+  FLAGS: -s -w -X main.buildNumber={{.GIT_COMMIT}} -X main.buildDate={{.DATE}} -X main.version={{.VERSION}}
+
+tasks:
+  show:
+    echo {{.GIT_COMMIT}}
+  clean:
+    silent: true
+    cmds:
+      - echo Cleaning...
+      - rm -Rf tmp
+      - mkdir tmp
+      - go clean -testcache
+  tun-up:
+    silent: true
+    cmds:
+      - scripts/tunnel-up.sh
+  tun-down:
+    silent: true
+    cmds:
+      - scripts/tunnel-down.sh
+  test:
+    cmds:
+      - go test ./... -run "^Test*"

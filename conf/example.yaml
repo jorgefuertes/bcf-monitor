@@ -5,6 +5,8 @@ databases:
     ssl: false
     timeout: 5
     every: 30
+    fail_after_retries: 2
+    remember_after_minutes: 30
   - name: mongodb01
     host: 192.168.1.2
     port: 27018
@@ -19,6 +21,8 @@ caches:
     password:
     timeout: 5
     every: 15
+    fail_after_retries: 3
+    remember_after_minutes: 30
 
 webs:
   - name: front-app
@@ -26,6 +30,8 @@ webs:
     needle: Welcome to the home
     timeout: 5
     every: 60
+    fail_after_retries: 2
+    remember_after_minutes: 120
   - name: api
     url: https://localhost/api/hello
     needle: Hello World
@@ -36,6 +42,8 @@ webs:
         value: your-app-key
     timeout: 5
     every: 60
+    fail_after_retries: 2
+    remember_after_minutes: 120
 
 pings:
   - name: localhost
@@ -46,6 +54,8 @@ pings:
     host: 192.168.1.1
     timeout: 5
     every: 10
+    fail_after_retries: 3
+    remember_after_minutes: 10
 
 smtp:
   host: my.mail-server.fqdn

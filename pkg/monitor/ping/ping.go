@@ -1,23 +1,24 @@
 package ping
 
 import (
-	"bcfmonitor/pkg/log"
+	"bcfmonitor/pkg/monitor/common"
 	"fmt"
 	"os/exec"
 	"runtime"
-	"time"
 )
 
 type PingService struct {
+	common.MonitorizableBase
 	name    string
 	host    string
-	timeout int
-	every   int
-	ok      bool
 }
 
 func NewService(name, host string, timeout, every int) *PingService {
-	return &PingService{name: name, host: host, timeout: timeout, every: every}
+	s :=  &PingService{name: name, host: host}
+	s.TimeoutSeconds = timeout
+	s.EverySeconds = every
+
+	return s
 }
 
 func (s *PingService) Address() string {
@@ -25,33 +26,18 @@ func (s *PingService) Address() string {
 }
 
 func (s *PingService) Check() error {
-	timeout := fmt.Sprintf("-i %d", s.timeout)
+	timeout := fmt.Sprintf("-i %d", s.TimeoutSeconds)
 	if runtime.GOOS == "linux" {
-		timeout = fmt.Sprintf("-w %d", s.timeout)
+		timeout = fmt.Sprintf("-w %d", s.TimeoutSeconds)
 	}
 	_, err := exec.Command("ping", s.host, "-c 1", timeout).Output()
 	if err != nil {
+		s.AddFail()
 		return err
 	}
+
+	s.Reset()
 	return nil
-}
-
-func (s *PingService) IsUp() bool {
-	return s.ok
-}
-
-func (s *PingService) Down() {
-	s.ok = false
-	log.Warnf("service/ping", "Service %s is DOWN", s.name)
-}
-
-func (s *PingService) Up() {
-	s.ok = true
-	log.Infof("service/ping", "Service %s is UP", s.name)
-}
-
-func (s *PingService) Every() time.Duration {
-	return time.Duration(s.every) * time.Second
 }
 
 func (s *PingService) Type() string {
